@@ -1,9 +1,10 @@
 import passport from 'passport'
 const JWTStrategy = require('passport-jwt').Strategy
 const LocalStrategy = require('passport-local').Strategy
+const GooglePlusTokenStrategy = require('passport-google-plus-token')
 const ExtractJwt = require('passport-jwt').ExtractJwt
 import bcrypt from 'bcryptjs'
-import { JWT_SECRET } from './config/keys'
+import { JWT_SECRET, GOOGLE_ClIENT_ID, GOOGLE_ClIENT_SECRET } from './config/keys'
 import User from './models/user'
 
 passport.use(
@@ -25,7 +26,8 @@ passport.use(
             done(error,false)
         }
     })
-)
+);
+
 
 passport.use(
    //LOCAL STRATEGY
@@ -37,7 +39,7 @@ passport.use(
         try{
 
             //Find the user by email
-            const user = await User.findOne({email})
+            const user = await User.findOne({"local.email":email})
             //User not found
             if(!user) return done(null, false)
             //If user found then check for password
@@ -53,3 +55,39 @@ passport.use(
         }
     })
 )
+
+passport.use(
+    'google',
+    new GooglePlusTokenStrategy({
+        clientID: GOOGLE_ClIENT_ID,
+        clientSecret:GOOGLE_ClIENT_SECRET,
+        // callbackURL:'/oauth/google/callback',
+        // passReqToCallback   : true
+        // authorizationURL: "/oauth/google"
+    },
+    async(accessToken,refreshToken,profile,done) => {
+        try 
+        {
+            //Check if user exists in database
+            //console.log(profile)
+            const user = await User.findOne({"google.id": profile.id})
+            if(user) return done(null,user)
+            //If not then create a user in database
+            const newUser = new User({
+                method: 'google',
+                google: {
+                    id: profile.id,
+                    email: profile.emails[0].value
+                }
+            })
+            await newUser.save()
+            done(null,user)   
+        }
+        catch (error) {
+            //return done(error,false,error.message)  
+            done(null,user) 
+        }
+
+    }
+))
+

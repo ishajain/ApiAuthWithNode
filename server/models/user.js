@@ -3,13 +3,18 @@ import bcrypt from 'bcryptjs'
 const { Schema } = mongoose
 //Create a schema
 const userSchema = new Schema({
-    email: {
-        type: String, required: true, unique: true
-    }
-    ,
-    password : {
-        type : String,
-        required: true
+    method: { type: String, enum: ['local','google','facebook']},
+    local: {
+        email: { type: String,lowercase:true},
+        password : {type : String}
+    },
+    google: {
+        id: {type: String},
+        email: { type: String,lowercase:true},
+    },
+    facebook: {
+        id: {type: String},
+        email: { type: String,lowercase:true},
     }
 })
 
@@ -17,14 +22,15 @@ const userSchema = new Schema({
 userSchema.pre('save', async function(next){
    try 
    {
-       //Generate Salt
-    const salt = await bcrypt.genSalt(10)
-        //Generare hash password with salt
-    const hashedPassword = await bcrypt.hash(this.password,salt)
-        // reassign the password to hashpassword to save in the database.
-    this.password = hashedPassword
-    next()
-   } catch (error) {
+        if(this.method === 'local') {
+            console.log("Test",this.local.password)
+            const salt = await bcrypt.genSalt(10) //Generate Salt
+            const hashedPassword = await bcrypt.hash(this.local.password,salt) //Generare hash password with salt
+            this.local.password = hashedPassword // reassign the password to hashpassword to save in the database.
+        }
+        next()
+   } catch (error) 
+   {
        next(error)
    }
     
@@ -33,7 +39,7 @@ userSchema.pre('save', async function(next){
 userSchema.methods.isValidPassword = async function(passwordToValidate){ // we are not using fat arrow function because we want to you this keyword
     try 
     {
-        return await  bcrypt.compare(passwordToValidate,this.password)
+        return await  bcrypt.compare(passwordToValidate,this.local.password)
     } catch (error) {
         throw new Error(error)
     }
