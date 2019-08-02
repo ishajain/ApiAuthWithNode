@@ -2,9 +2,11 @@ import passport from 'passport'
 const JWTStrategy = require('passport-jwt').Strategy
 const LocalStrategy = require('passport-local').Strategy
 const GooglePlusTokenStrategy = require('passport-google-plus-token')
+const FacebookTokenStrategy = require('passport-facebook-token')
+
 const ExtractJwt = require('passport-jwt').ExtractJwt
 import bcrypt from 'bcryptjs'
-import { JWT_SECRET, GOOGLE_ClIENT_ID, GOOGLE_ClIENT_SECRET } from './config/keys'
+import { JWT_SECRET, GOOGLE_ClIENT_ID, GOOGLE_ClIENT_SECRET, FACEBOOK_APP_ID,FACEBOOK_APP_SECRET } from './config/keys'
 import User from './models/user'
 
 passport.use(
@@ -85,9 +87,40 @@ passport.use(
         }
         catch (error) {
             //return done(error,false,error.message)  
-            done(null,user) 
+            done(null,error) 
         }
 
     }
 ))
+
+passport.use(
+    'facebook', 
+    new FacebookTokenStrategy({
+        clientID: FACEBOOK_APP_ID,
+        clientSecret: FACEBOOK_APP_SECRET
+    },
+    async (accessToken,refreshToken,profile,done) => {
+     try {
+        //check if user exist in database
+        const user = await User.findOne({"facebook.id": profile.id})
+        if(user) return done(null,user)
+        //If user does not exist then create one
+        const newUser = new User({
+            method: 'facebook',
+            facebook: {
+                id: profile.id,
+                email: profile.emails[0].value,
+                
+            }
+        })
+        await newUser.save()
+        done(null, newUser)    
+     }
+     catch (error) {
+       done(null,error)  
+     }
+
+    })
+    )
+
 

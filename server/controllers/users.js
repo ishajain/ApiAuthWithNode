@@ -43,11 +43,18 @@ module.exports = {
        const token = signToken(req.user) // this user is provided to us by passort
        res.status(200).json({token,user:{ id: req.user.id, email: req.user.email}})
     },
-    googleOAuthsignIn : async (req,res,next) => {
+    googleOAuthSignIn : async (req,res,next) => {
         //Generate Token
         const token = signToken(req.user) // this user is provided to us by passort
         res.status(200).json({token})
      },
+    
+    facebookOAuthSignIn: async (req,res,next) => {
+        //Generate Token
+        const token = signToken(req.user) // this user is provided to us by passort
+        res.status(200).json({token})
+     },
+     
     secret : (req,res,next) => {
         res.send( { data : "You have got the secret    "})
     }
