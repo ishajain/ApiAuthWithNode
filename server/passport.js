@@ -73,6 +73,8 @@ passport.use(
             //Check if user exists in database
             //console.log(profile)
             const user = await User.findOne({"google.id": profile.id})
+            console.log(user)
+
             if(user) return done(null,user)
             //If not then create a user in database
             const newUser = new User({
@@ -102,7 +104,10 @@ passport.use(
     async (accessToken,refreshToken,profile,done) => {
      try {
         //check if user exist in database
+        console.log(1)
+
         const user = await User.findOne({"facebook.id": profile.id})
+        console.log(user)
         if(user) return done(null,user)
         //If user does not exist then create one
         const newUser = new User({

@@ -19,7 +19,7 @@ module.exports = {
 
         //check if the user with the email already exists in the database
         const userFound = await User.findOne({ "local.email" :email })
-        if(userFound) res.status(400).json({error : "Email is already in use"})
+        if(userFound) res.status(403).json({error : "Email is already in use"})
 
         //If not then create new user
         const user = new User({
@@ -56,7 +56,7 @@ module.exports = {
      },
      
     secret : (req,res,next) => {
-        res.send( { data : "You have got the secret    "})
+        res.send( { secret : "You have got the secret"})
     }
 }
    
